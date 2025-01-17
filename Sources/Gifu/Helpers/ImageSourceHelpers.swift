@@ -16,7 +16,7 @@ private let defaultFrameDuration: Double = 1 / defaultFrameRate
 /// Threshold used in `capDuration` for a FrameDuration
 private let capDurationThreshold: Double = 0.02 - Double.ulpOfOne
 
-/// Frameduration used, if a frame-duration is below `capDurationThreshold`
+/// Frame duration used, if a frame-duration is below `capDurationThreshold`
 private let minFrameDuration: Double = 0.1
 
 /// Returns the duration of a frame at a specific index using an image source (an `CGImageSource` instance).
