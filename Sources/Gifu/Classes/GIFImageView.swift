@@ -4,7 +4,7 @@ import UIKit
 public class GIFImageView: UIImageView, GIFAnimatable {
   /// A lazy animator.
   public lazy var animator: Animator? = {
-    return Animator(withDelegate: self)
+    Animator(withDelegate: self)
   }()
 
   /// Layer delegate method called periodically by the layer. **Should not** be called manually.

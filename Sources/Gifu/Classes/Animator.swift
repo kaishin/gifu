@@ -1,6 +1,7 @@
 import UIKit
 
 /// Responsible for parsing GIF data and decoding the individual frames.
+@MainActor
 public class Animator {
   /// Total duration of one animation loop
   var loopDuration: TimeInterval {
@@ -20,7 +21,7 @@ public class Animator {
   private var displayLinkInitialized: Bool = false
 
   /// A delegate responsible for displaying the GIF frames.
-  private weak var delegate: (any GIFAnimatable)!
+  private weak var delegate: (any GIFAnimatable)?
 
   /// Callback for when all the loops of the animation are done (never called for infinite loops)
   private var animationBlock: (() -> Void)? = nil
@@ -31,6 +32,7 @@ public class Animator {
   /// Responsible for starting and stopping the animation.
   private lazy var displayLink: CADisplayLink = { [unowned self] in
     self.displayLinkInitialized = true
+
     let display = CADisplayLink(
       target: DisplayLinkProxy(target: self),
       selector: #selector(DisplayLinkProxy.onScreenUpdate)
@@ -71,7 +73,7 @@ public class Animator {
 
     store.shouldChangeFrame(with: displayLink.duration) {
       if $0 {
-        delegate.animatorHasNewFrame()
+        delegate?.animatorHasNewFrame()
         if store.isLoopFinished, let loopBlock {
           loopBlock()
         }
@@ -88,8 +90,12 @@ public class Animator {
   /// - parameter loopCount: Desired number of loops, <= 0 for infinite loop.
   /// - parameter completionHandler: Completion callback function
   func prepareForAnimation(
-    withGIFNamed imageName: String, inBundle bundle: Bundle = .main, size: CGSize,
-    contentMode: UIView.ContentMode, loopCount: Int = 0, completionHandler: (() -> Void)? = nil
+    withGIFNamed imageName: String,
+    inBundle bundle: Bundle = .main,
+    size: CGSize,
+    contentMode: UIView.ContentMode,
+    loopCount: Int = 0,
+    completionHandler: (@Sendable () -> Void)? = nil
   ) {
     guard let extensionRemoved = imageName.components(separatedBy: ".")[safe: 0],
       let imagePath = bundle.url(forResource: extensionRemoved, withExtension: "gif"),
@@ -101,7 +107,8 @@ public class Animator {
       size: size,
       contentMode: contentMode,
       loopCount: loopCount,
-      completionHandler: completionHandler)
+      completionHandler: completionHandler
+    )
   }
 
   /// Prepares the animator instance for animation.
@@ -116,7 +123,7 @@ public class Animator {
     size: CGSize,
     contentMode: UIView.ContentMode,
     loopCount: Int = 0,
-    completionHandler: (() -> Void)? = nil
+    completionHandler: (@Sendable () -> Void)? = nil
   ) {
     frameStore = FrameStore(
       data: imageData,
@@ -136,9 +143,15 @@ public class Animator {
     displayLink.add(to: .main, forMode: RunLoop.Mode.common)
   }
 
-  deinit {
-    if displayLinkInitialized {
+  private func invalidateDisplayLink() {
+    Task { [displayLink] in
       displayLink.invalidate()
+    }
+  }
+
+  deinit {
+    MainActor.assumeIsolated {
+      invalidateDisplayLink()
     }
   }
 
@@ -164,9 +177,13 @@ public class Animator {
   /// - parameter animationBlock: Callback for when all the loops of the animation are done (never called for infinite loops)
   /// - parameter loopBlock: Callback for when a loop is done (at the end of each loop)
   func animate(
-    withGIFNamed imageName: String, size: CGSize, contentMode: UIView.ContentMode,
-    loopCount: Int = 0, preparationBlock: (() -> Void)? = nil, animationBlock: (() -> Void)? = nil,
-    loopBlock: (() -> Void)? = nil
+    withGIFNamed imageName: String,
+    size: CGSize,
+    contentMode: UIView.ContentMode,
+    loopCount: Int = 0,
+    preparationBlock: (@Sendable () -> Void)? = nil,
+    animationBlock: (@Sendable () -> Void)? = nil,
+    loopBlock: (@Sendable () -> Void)? = nil
   ) {
     self.animationBlock = animationBlock
     self.loopBlock = loopBlock
@@ -175,7 +192,8 @@ public class Animator {
       size: size,
       contentMode: contentMode,
       loopCount: loopCount,
-      completionHandler: preparationBlock)
+      completionHandler: preparationBlock
+    )
     startAnimating()
   }
 
@@ -189,9 +207,13 @@ public class Animator {
   /// - parameter animationBlock: Callback for when all the loops of the animation are done (never called for infinite loops)
   /// - parameter loopBlock: Callback for when a loop is done (at the end of each loop)
   func animate(
-    withGIFData imageData: Data, size: CGSize, contentMode: UIView.ContentMode, loopCount: Int = 0,
-    preparationBlock: (() -> Void)? = nil, animationBlock: (() -> Void)? = nil,
-    loopBlock: (() -> Void)? = nil
+    withGIFData imageData: Data,
+    size: CGSize,
+    contentMode: UIView.ContentMode,
+    loopCount: Int = 0,
+    preparationBlock: (@Sendable () -> Void)? = nil,
+    animationBlock: (@Sendable () -> Void)? = nil,
+    loopBlock: (@Sendable () -> Void)? = nil
   ) {
     self.animationBlock = animationBlock
     self.loopBlock = loopBlock
@@ -200,7 +222,8 @@ public class Animator {
       size: size,
       contentMode: contentMode,
       loopCount: loopCount,
-      completionHandler: preparationBlock)
+      completionHandler: preparationBlock
+    )
     startAnimating()
   }
 
@@ -232,5 +255,5 @@ private class DisplayLinkProxy {
   init(target: Animator) { self.target = target }
 
   /// Lets the target update the frame if needed.
-  @objc func onScreenUpdate() { target?.updateFrameIfNeeded() }
+  @MainActor @objc func onScreenUpdate() { target?.updateFrameIfNeeded() }
 }

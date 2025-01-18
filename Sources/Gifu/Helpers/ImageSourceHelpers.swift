@@ -1,6 +1,7 @@
 import ImageIO
 import MobileCoreServices
 import UIKit
+import UniformTypeIdentifiers
 
 typealias GIFProperties = [String: Double]
 
@@ -69,7 +70,8 @@ extension CGImageSource {
   ///
   /// - returns: A boolean value that is `true` if the image source contains animated GIF data.
   var isAnimatedGIF: Bool {
-    let isTypeGIF = UTTypeConformsTo(CGImageSourceGetType(self) ?? "" as CFString, kUTTypeGIF)
+    let type = (CGImageSourceGetType(self) as? String) ?? ""
+    let isTypeGIF = UTType(type)?.conforms(to: .gif)
     let imageCount = CGImageSourceGetCount(self)
     return isTypeGIF != false && imageCount > 1
   }

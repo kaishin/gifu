@@ -2,9 +2,9 @@ import ImageIO
 import UIKit
 
 /// Responsible for storing and updating the frames of a single GIF.
-class FrameStore {
+final class FrameStore: @unchecked Sendable {
   /// The strategy to use for frame cache.
-  enum FrameCachingStrategy: Equatable {
+  enum FrameCachingStrategy: Equatable, Sendable {
     // Cache only a given number of upcoming frames.
     case cacheUpcoming(Int)
 
@@ -152,7 +152,7 @@ class FrameStore {
 
   // MARK: - Frames
   /// Loads the frames from an image source, resizes them, then caches them in `animatedFrames`.
-  func prepareFrames(_ completionHandler: (() -> Void)? = nil) {
+  func prepareFrames(_ completionHandler: (@Sendable () -> Void)? = nil) {
     frameCount = Int(CGImageSourceGetCount(imageSource))
     lock.lock()
     animatedFrames.reserveCapacity(frameCount)
@@ -228,8 +228,7 @@ extension FrameStore {
   /// Updates the frames by preloading new ones and replacing the previous frame with a placeholder.
   private func updateFrameCache() {
     if case let .cacheUpcoming(size) = cachingStrategy,
-      size < frameCount - 1
-    {
+      size < frameCount - 1 {
       deleteCachedFrame(at: previousFrameIndex)
     }
 
