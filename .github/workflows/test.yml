@@ -21,7 +21,7 @@ jobs:
         with:
           xcode-version: "15.4.0"
       - name: Run iOS tests
-        run: make test-ios PLATFORM="iOS Simulator,name=iPhone 15"
+        run: make test-ios-17
       - name: Run tvOS tests
         run: make test-tvos
 
@@ -36,6 +36,6 @@ jobs:
         with:
           xcode-version: "16.1.0"
       - name: Run iOS tests
-        run: make test-ios PLATFORM="iOS Simulator,name=iPhone 16"
+        run: make test-ios-18
       - name: Run tvOS tests
         run: make test-tvos
