@@ -1,4 +1,4 @@
-PLATFORM ?= "iOS,name=iPhone 16"
+PLATFORM ?= "iOS Simulator,name=iPhone 16"
 
 test-ios:
 	set -o pipefail && \
