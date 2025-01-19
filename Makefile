@@ -1,12 +1,12 @@
-DEVICE ?= "iPhone 15"
+PLATFORM ?= "iOS,name=iPhone 16"
 
 test-ios:
 	set -o pipefail && \
 	xcodebuild test \
 		-project Gifu.xcodeproj \
 		-scheme Gifu \
-		-destination platform="iOS Simulator,name=$(DEVICE)" \
-		| xcpretty
+		-destination platform=$(PLATFORM) \
+		| xcbeautify
 
 test-tvos:
 	set -o pipefail && \
@@ -14,4 +14,4 @@ test-tvos:
 		-project Gifu.xcodeproj \
 		-scheme Gifu \
 		-destination platform="tvOS Simulator,name=Apple TV" \
-		| xcpretty
+		| xcbeautify

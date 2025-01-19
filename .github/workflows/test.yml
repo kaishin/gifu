@@ -9,6 +9,7 @@ on:
       - master
 
 jobs:
+  # Device list: https://github.com/actions/runner-images/blob/main/images/macos/macos-15-Readme.md
   build-xcode-15:
     runs-on: macos-latest
     env:
@@ -20,21 +21,21 @@ jobs:
         with:
           xcode-version: 15.4
       - name: Run iOS tests
-        run: make test-ios DEVICE="iPhone 15"
+        run: make test-ios PLATFORM="iOS Simulator,name=iPhone 15"
       - name: Run tvOS tests
         run: make test-tvos
 
   build-xcode-16:
     runs-on: macos-latest
     env:
-      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_16.app/Contents/Developer
 
     steps:
       - uses: actions/checkout@v1
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: 16.2
+          xcode-version: 16.0
       - name: Run iOS tests
-        run: make test-ios DEVICE="iPhone 16"
+        run: make test-ios PLATFORM="iOS Simulator,name=iPhone 16"
       - name: Run tvOS tests
         run: make test-tvos
