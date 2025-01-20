@@ -1,6 +1,7 @@
 import ImageIO
 import MobileCoreServices
 import UIKit
+import UniformTypeIdentifiers
 
 typealias GIFProperties = [String: Double]
 
@@ -16,7 +17,7 @@ private let defaultFrameDuration: Double = 1 / defaultFrameRate
 /// Threshold used in `capDuration` for a FrameDuration
 private let capDurationThreshold: Double = 0.02 - Double.ulpOfOne
 
-/// Frameduration used, if a frame-duration is below `capDurationThreshold`
+/// Frame duration used, if a frame-duration is below `capDurationThreshold`
 private let minFrameDuration: Double = 0.1
 
 /// Returns the duration of a frame at a specific index using an image source (an `CGImageSource` instance).
@@ -69,7 +70,8 @@ extension CGImageSource {
   ///
   /// - returns: A boolean value that is `true` if the image source contains animated GIF data.
   var isAnimatedGIF: Bool {
-    let isTypeGIF = UTTypeConformsTo(CGImageSourceGetType(self) ?? "" as CFString, kUTTypeGIF)
+    let type = (CGImageSourceGetType(self) as? String) ?? ""
+    let isTypeGIF = UTType(type)?.conforms(to: .gif)
     let imageCount = CGImageSourceGetCount(self)
     return isTypeGIF != false && imageCount > 1
   }
